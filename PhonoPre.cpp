@@ -52,25 +52,19 @@ int main(void)
   Display::reset();
   Display::setDim(10);
   Color::set(true);
+  _delay_ms(200);
+  ui.init();
+  _delay_ms(200);
 
   while(1)
   {
-    static uint16_t i = 7000;
     if(poll)
     {
       poll = false;
-      portExtender::ReadIO();
-      Switch_1::Read();
-      Switch_2::Read();
       Debug::Toggle();
-      if(Switch_1::lowered()) i++;
+      ui.poll();
+      ui.doEvents();
 
-      i += Encoder::Read();
-
-      Led2::set(Switch_2::high());
-      Led1::set(Encoder::immediate_value());
-      portExtender::WriteIO();
-      Display::printDec(i);
     }
   }
 }

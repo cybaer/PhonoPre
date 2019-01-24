@@ -69,7 +69,7 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
       SPI::Write(buf[2]);
       SPI::Write(buf[3]);
     }
-   /* void printText(const char *t)
+    static void printText(const char *t)
     {
       char buf[5];
       for(int i=0; i<4; i++)
@@ -77,9 +77,12 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
         buf[i] = t[i];
       }
       buf[4] = '\0';
-      m_Serial.print(buf);
+      SPI::Write(buf[0]);
+      SPI::Write(buf[1]);
+      SPI::Write(buf[2]);
+      SPI::Write(buf[3]);
     }
-    void printScrollText(const char *t)
+    /*void printScrollText(const char *t)
     {
       m_Scrolling = true;
       for(int i=0; i<20; i++)
