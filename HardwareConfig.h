@@ -146,6 +146,49 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
 
   typedef C7Segment<spi_Display> Display;
 
+  template <typename Rel1, typename Rel2, typename Rel3, typename Rel4>
+  class Capacitor
+  {
+  public:
+    static void init()
+    {
+      Rel1::set_mode(DIGITAL_OUTPUT);
+      Rel2::set_mode(DIGITAL_OUTPUT);
+      Rel3::set_mode(DIGITAL_OUTPUT);
+      Rel4::set_mode(DIGITAL_OUTPUT);
+    }
+    static void set(int8_t val)
+    {
+      Rel1::set_value(val & 0x01);
+      Rel2::set_value(val & 0x02);
+      Rel3::set_value(val & 0x04);
+      Rel4::set_value(val & 0x08);
+    }
+  };
+
+  typedef Capacitor<Gpio<PortD, 5>, Gpio<PortD, 6>, Gpio<PortD, 7>, Gpio<PortD, 4> > Cap1;
+  typedef Capacitor<Gpio<PortC, 2>, Gpio<PortC, 3>, Gpio<PortC, 4>, Gpio<PortC, 5> > Cap2;
+
+
+  template <typename Rel1, typename Rel2>
+    class Resistor
+    {
+    public:
+      static void init()
+      {
+        Rel1::set_mode(DIGITAL_OUTPUT);
+        Rel2::set_mode(DIGITAL_OUTPUT);
+      }
+      static void setHigh(bool in)
+      {
+        Rel1::set_value(in);
+        Rel2::set_value(!in);
+
+      }
+    };
+
+  typedef Resistor<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
+  typedef Resistor<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
 
   template<typename LedPin, typename Color>
   class DualColorLED
@@ -178,6 +221,13 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
     initInputs();
     initOutputs();
     spi_Display::Init();
+
+    Cap1::init();
+    Cap2::init();
+    Res1::init();
+    Res2::init();
+
+
     Switch_1::Init();
     Switch_2::Init();
     Led1::init();

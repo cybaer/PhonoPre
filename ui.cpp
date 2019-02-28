@@ -37,18 +37,25 @@ void Ui::doEvents()
 {
   if(m_Xcrement != 0)    {m_State->onXcrement(*this, m_Xcrement);}
   if(Encoder::clicked()) m_State->onClick(*this);
-
-
-  static int16_t i = 5000;
+  if(Switch_1::raised()) m_State->onClickSW1(*this);
+  if(Switch_2::raised()) m_State->onClickSW2(*this);
+/*
+  static int16_t i = 0;
   if(Switch_1::lowered()) i++;
 
   i += m_Xcrement;
+  //Cap1::set(i);
+  Cap2::set(i);
 
   Led2::set(Switch_2::high());
+  Res2::setHigh(Switch_2::high());
+
   Led1::set(Encoder::immediate_value());
 
   portExtender::WriteIO();
-  //Display::printDec(m_Xcrement);
+  Display::printDec(i);*/
+
+  portExtender::WriteIO();
 }
 
 
@@ -81,11 +88,11 @@ void Ui::CMenueListenState::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CMenueCap1State::onEntry(Ui& context) const
 {
-  Display::printText("Cap1 ");
+  Display::printText("Cap1");
 }
 void Ui::CMenueCap1State::onClick(Ui& context) const
 {
-  context.setState(Ui::CListenState::getInstance());
+  context.setState(Ui::CCap1State::getInstance());
 }
 void Ui::CMenueCap1State::onXcrement(Ui& context, int8_t xcrement) const
 {
@@ -100,11 +107,11 @@ void Ui::CMenueCap1State::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CMenueCap2State::onEntry(Ui& context) const
 {
-
+  Display::printText("Cap2");
 }
 void Ui::CMenueCap2State::onClick(Ui& context) const
 {
-  context.setState(Ui::CListenState::getInstance());
+  context.setState(Ui::CCap2State::getInstance());
 }
 void Ui::CMenueCap2State::onXcrement(Ui& context, int8_t xcrement) const
 {
@@ -119,7 +126,7 @@ void Ui::CMenueCap2State::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CMenueR1State::onEntry(Ui& context) const
 {
-
+  Display::printText("Res1");
 }
 void Ui::CMenueR1State::onClick(Ui& context) const
 {
@@ -138,7 +145,7 @@ void Ui::CMenueR1State::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CMenueR2State::onEntry(Ui& context) const
 {
-
+  Display::printText("Res2");
 }
 void Ui::CMenueR2State::onClick(Ui& context) const
 {
@@ -157,7 +164,7 @@ void Ui::CMenueR2State::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CMenueRPMState::onEntry(Ui& context) const
 {
-
+  Display::printText("Freq");
 }
 void Ui::CMenueRPMState::onClick(Ui& context) const
 {
@@ -167,11 +174,30 @@ void Ui::CMenueRPMState::onXcrement(Ui& context, int8_t xcrement) const
 {
   if(xcrement > 0)
   {
-    context.setState(Ui::CMenueListenState::getInstance());
+    context.setState(Ui::CMenueLoadState::getInstance());
   }
   if(xcrement < 0)
   {
     context.setState(Ui::CMenueR2State::getInstance());
+  }
+}
+void Ui::CMenueLoadState::onEntry(Ui& context) const
+{
+  Display::printText("Load");
+}
+void Ui::CMenueLoadState::onClick(Ui& context) const
+{
+  context.setState(Ui::CListenState::getInstance());
+}
+void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
+{
+  if(xcrement > 0)
+  {
+    context.setState(Ui::CMenueListenState::getInstance());
+  }
+  if(xcrement < 0)
+  {
+    context.setState(Ui::CMenueRPMState::getInstance());
   }
 }
 
@@ -180,7 +206,8 @@ void Ui::CMenueRPMState::onXcrement(Ui& context, int8_t xcrement) const
 void Ui::CListenState::onEntry(Ui& context) const
 {
   // read state values from EEPROM
-  //Display::printDec(3000);
+
+  Display::printText("LIS1");
 }
 void Ui::CListenState::onClick(Ui& context) const
 {
@@ -188,13 +215,73 @@ void Ui::CListenState::onClick(Ui& context) const
 }
 void Ui::CListenState::onClickSW1(Ui& context) const
 {
-  //
+  Display::printText("LIS1");
 }
 void Ui::CListenState::onClickSW2(Ui& context) const
 {
-  //
+  Display::printText("LIS2");
 }
 void Ui::CListenState::onExit(Ui& context) const
+{
+  //??
+}
+
+void Ui::CCap1State::onEntry(Ui& context) const
+{
+  // read state values from EEPROM
+  context.m_Cap1 = 0;
+  Cap1::set(context.m_Cap1);
+  Display::printDec(context.m_Cap1);
+}
+void Ui::CCap1State::onClick(Ui& context) const
+{
+  context.setState(Ui::CMenueCap1State::getInstance());
+}
+void Ui::CCap1State::onXcrement(Ui& context, int8_t xcrement) const
+{
+ context.m_Cap1 += xcrement;
+ Cap1::set(context.m_Cap1);
+ Display::printDec(context.m_Cap1);
+}
+void Ui::CCap1State::onClickSW1(Ui& context) const
+{
+  Display::printText("T1");
+}
+void Ui::CCap1State::onClickSW2(Ui& context) const
+{
+  Display::printText("T2");
+}
+void Ui::CCap1State::onExit(Ui& context) const
+{
+  //??
+}
+
+void Ui::CCap2State::onEntry(Ui& context) const
+{
+  // read state values from EEPROM
+  context.m_Cap2 = 0;
+  Cap2::set(context.m_Cap2);
+  Display::printDec(context.m_Cap2);
+}
+void Ui::CCap2State::onClick(Ui& context) const
+{
+  context.setState(Ui::CMenueCap2State::getInstance());
+}
+void Ui::CCap2State::onXcrement(Ui& context, int8_t xcrement) const
+{
+ context.m_Cap2 += xcrement;
+ Cap2::set(context.m_Cap2);
+ Display::printDec(context.m_Cap2);
+}
+void Ui::CCap2State::onClickSW1(Ui& context) const
+{
+  Display::printText("T1");
+}
+void Ui::CCap2State::onClickSW2(Ui& context) const
+{
+  Display::printText("T2");
+}
+void Ui::CCap2State::onExit(Ui& context) const
 {
   //??
 }

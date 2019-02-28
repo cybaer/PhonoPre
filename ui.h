@@ -44,6 +44,8 @@ public:
 
 private:
   int8_t m_Xcrement;
+  int8_t m_Cap1;
+  int8_t m_Cap2;
 
 
 class IUiState
@@ -153,6 +155,18 @@ class IUiState
     virtual void onClick(Ui&) const;
     virtual void onXcrement(Ui&, int8_t xcrement) const;
   };
+  class CMenueLoadState: public IUiState
+  {
+  public:
+    static CMenueLoadState& getInstance(void)
+    {
+      static CMenueLoadState s_instance;
+      return s_instance;
+    }
+    virtual void onEntry(Ui&) const;
+    virtual void onClick(Ui&) const;
+    virtual void onXcrement(Ui&, int8_t xcrement) const;
+  };
 
   class CListenState: public IUiState
   {
@@ -168,8 +182,42 @@ class IUiState
     //virtual void onXcrement(Ui&, int8_t xcrement) const;
     virtual void onClickSW1(Ui&) const;
     virtual void onClickSW2(Ui&) const;
-
   };
+
+  class CCap1State: public IUiState
+    {
+    public:
+      static CCap1State& getInstance(void)
+      {
+        static CCap1State s_instance;
+        return s_instance;
+      }
+      virtual void onEntry(Ui&) const;
+      virtual void onExit(Ui&) const;
+      virtual void onClick(Ui&) const;
+      virtual void onXcrement(Ui&, int8_t xcrement) const;
+      virtual void onClickSW1(Ui&) const;
+      virtual void onClickSW2(Ui&) const;
+
+    };
+
+  class CCap2State: public IUiState
+      {
+      public:
+        static CCap2State& getInstance(void)
+        {
+          static CCap2State s_instance;
+          return s_instance;
+        }
+        virtual void onEntry(Ui&) const;
+        virtual void onExit(Ui&) const;
+        virtual void onClick(Ui&) const;
+        virtual void onXcrement(Ui&, int8_t xcrement) const;
+        virtual void onClickSW1(Ui&) const;
+        virtual void onClickSW2(Ui&) const;
+
+      };
+
 
   void setState(IUiState& state)
   {
