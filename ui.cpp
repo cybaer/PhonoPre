@@ -35,10 +35,27 @@ void Ui::poll()
 }
 void Ui::doEvents()
 {
-  if(m_Xcrement != 0)    {m_State->onXcrement(*this, m_Xcrement);}
-  if(Encoder::clicked()) m_State->onClick(*this);
-  if(Switch_1::raised()) m_State->onClickSW1(*this);
-  if(Switch_2::raised()) m_State->onClickSW2(*this);
+  bool event = false;
+  if(m_Xcrement != 0)
+  {
+    event = true;
+    m_State->onXcrement(*this, m_Xcrement);
+  }
+  if(Encoder::clicked())
+  {
+    event = true;
+    m_State->onClick(*this);
+  }
+  if(Switch_1::raised())
+  {
+    event = true;
+    m_State->onClickSW1(*this);
+  }
+  if(Switch_2::raised())
+  {
+    event = true;
+    m_State->onClickSW2(*this);
+  }
 /*
   static int16_t i = 0;
   if(Switch_1::lowered()) i++;
@@ -55,7 +72,7 @@ void Ui::doEvents()
   portExtender::WriteIO();
   Display::printDec(i);*/
 
-  portExtender::WriteIO();
+  if(event)  portExtender::WriteIO();
 }
 
 
@@ -206,6 +223,11 @@ void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
 void Ui::CListenState::onEntry(Ui& context) const
 {
   // read state values from EEPROM
+  Res1::setHigh(false);
+  Res2::setHigh(false);
+  Cap1::set(4);
+  Cap2::set(4);
+  ChannelSwitch::activateCh1();
 
   Display::printText("LIS1");
 }
@@ -215,10 +237,14 @@ void Ui::CListenState::onClick(Ui& context) const
 }
 void Ui::CListenState::onClickSW1(Ui& context) const
 {
+  RPM::set_value(true);
+  ChannelSwitch::activateCh1();
   Display::printText("LIS1");
 }
 void Ui::CListenState::onClickSW2(Ui& context) const
 {
+  RPM::set_value(false);
+  ChannelSwitch::activateCh2();
   Display::printText("LIS2");
 }
 void Ui::CListenState::onExit(Ui& context) const

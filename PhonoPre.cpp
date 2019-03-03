@@ -58,8 +58,12 @@ int main(void)
 
   while(1)
   {
-    if(poll)
+
+    static uint16_t count= 0;
+    //if(count >= 10000UL) cli();
+    if(poll && count < 10000UL)
     {
+      //count++;
       poll = false;
       Debug::Toggle();
       ui.poll();

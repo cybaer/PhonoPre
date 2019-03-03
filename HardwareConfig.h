@@ -29,12 +29,11 @@
 #include "avrlib/devices/switch.h"
 #include "avrlib/devices/rotary_encoder.h"
 
-
-
 using namespace avrlib;
 typedef Gpio<PortD, 2> Debug;
 typedef Gpio<PortB, 2> CS1;
 typedef Gpio<PortB, 1> CS2;
+typedef Gpio<PortD, 0> RPM;
 
 // HW SPI
 static const uint8_t SPI_Speed = 32;
@@ -46,7 +45,6 @@ typedef DebouncedSwitch<PortPin<portExtender, 1> > Switch_1;
 typedef DebouncedSwitch<PortPin<portExtender, 2> > Switch_2;
 
 typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPin<portExtender, 3> > Encoder;
-
 
   template<typename SPI>
   class C7Segment
@@ -171,7 +169,7 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
 
 
   template <typename Rel1, typename Rel2>
-    class Resistor
+    class Switcher
     {
     public:
       static void init()
@@ -183,12 +181,14 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
       {
         Rel1::set_value(in);
         Rel2::set_value(!in);
-
       }
+      static void activateCh1(void) { setHigh(false); }
+      static void activateCh2(void) { setHigh(true); }
     };
 
-  typedef Resistor<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
-  typedef Resistor<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
+  typedef Switcher<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
+  typedef Switcher<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
+  typedef Switcher<Gpio<PortD, 3>, Gpio<PortD, 1> > ChannelSwitch;
 
   template<typename LedPin, typename Color>
   class DualColorLED
@@ -214,6 +214,8 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
   {
     Debug::set_mode(DIGITAL_OUTPUT);
     Debug::set_value(true);
+    RPM::set_mode(DIGITAL_OUTPUT);
+    RPM::set_value(true);
   }
 
   inline void initHW(void)
