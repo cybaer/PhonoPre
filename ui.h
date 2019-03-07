@@ -44,9 +44,6 @@ public:
 
 private:
   int8_t m_Xcrement;
-  int8_t m_Cap1;
-  int8_t m_Cap2;
-
 
 class IUiState
   {

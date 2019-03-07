@@ -157,12 +157,16 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
     }
     static void set(int8_t val)
     {
+      value = val;
       Rel1::set_value(val & 0x01);
       Rel2::set_value(val & 0x02);
       Rel3::set_value(val & 0x04);
       Rel4::set_value(val & 0x08);
     }
+    static int8_t value;
   };
+  template <typename Rel1, typename Rel2, typename Rel3, typename Rel4>
+  int8_t Capacitor<Rel1, Rel2, Rel3, Rel4>::value;
 
   typedef Capacitor<Gpio<PortD, 5>, Gpio<PortD, 6>, Gpio<PortD, 7>, Gpio<PortD, 4> > Cap1;
   typedef Capacitor<Gpio<PortC, 2>, Gpio<PortC, 3>, Gpio<PortC, 4>, Gpio<PortC, 5> > Cap2;
@@ -179,12 +183,18 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
       }
       static void setHigh(bool in)
       {
+        value = in;
         Rel1::set_value(in);
         Rel2::set_value(!in);
       }
       static void activateCh1(void) { setHigh(false); }
       static void activateCh2(void) { setHigh(true); }
+      static bool value;
     };
+    template <typename Rel1, typename Rel2>
+    bool Switcher<Rel1, Rel2>::value;
+
+
 
   typedef Switcher<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
   typedef Switcher<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
@@ -213,7 +223,7 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
   inline void initOutputs(void)
   {
     Debug::set_mode(DIGITAL_OUTPUT);
-    Debug::set_value(true);
+    Debug::set_value(false);
     RPM::set_mode(DIGITAL_OUTPUT);
     RPM::set_value(true);
   }

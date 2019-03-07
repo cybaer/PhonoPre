@@ -17,7 +17,6 @@
  *
  */
 
-
 #include "avrlib/time.h"
 #include "avrlib/gpio.h"
 #include "avrlib/adc.h"
@@ -65,7 +64,7 @@ int main(void)
     {
       //count++;
       poll = false;
-      Debug::Toggle();
+      //Debug::Toggle();
       ui.poll();
       ui.doEvents();
 

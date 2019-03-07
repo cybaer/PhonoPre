@@ -18,7 +18,17 @@
  */
 
 #include "ui.h"
+#include <avr/eeprom.h>
 
+struct PhonoData
+{
+  int8_t cap1;
+  int8_t cap2;
+  bool res1;
+  bool res2;
+};
+PhonoData eeData EEMEM ;
+PhonoData Data;
 
 Ui::Ui()
 : m_Xcrement(0)
@@ -35,28 +45,12 @@ void Ui::poll()
 }
 void Ui::doEvents()
 {
-  bool event = false;
-  if(m_Xcrement != 0)
-  {
-    event = true;
-    m_State->onXcrement(*this, m_Xcrement);
-  }
-  if(Encoder::clicked())
-  {
-    event = true;
-    m_State->onClick(*this);
-  }
-  if(Switch_1::raised())
-  {
-    event = true;
-    m_State->onClickSW1(*this);
-  }
-  if(Switch_2::raised())
-  {
-    event = true;
-    m_State->onClickSW2(*this);
-  }
-/*
+  if(m_Xcrement != 0)     m_State->onXcrement(*this, m_Xcrement);
+  if(Encoder::clicked())  m_State->onClick(*this);
+  if(Switch_1::raised())  m_State->onClickSW1(*this);
+  if(Switch_2::raised())  m_State->onClickSW2(*this);
+
+  /*
   static int16_t i = 0;
   if(Switch_1::lowered()) i++;
 
@@ -72,7 +66,7 @@ void Ui::doEvents()
   portExtender::WriteIO();
   Display::printDec(i);*/
 
-  if(event)  portExtender::WriteIO();
+  portExtender::WriteIO();
 }
 
 
@@ -81,6 +75,11 @@ void Ui::doEvents()
 void Ui::CInitState::onExit(Ui& context) const
 {
   // read values from EEPROM
+  eeprom_read_block(&Data, &eeData, sizeof(Data));
+  Cap1::set(Data.cap1);
+  Cap2::set(Data.cap2);
+  Res1::setHigh(Data.res1);
+  Res2::setHigh(Data.res2);
   //context.setState(Ui::CListenState::getInstance());
 }
 
@@ -222,13 +221,6 @@ void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
 
 void Ui::CListenState::onEntry(Ui& context) const
 {
-  // read state values from EEPROM
-  Res1::setHigh(false);
-  Res2::setHigh(false);
-  Cap1::set(4);
-  Cap2::set(4);
-  ChannelSwitch::activateCh1();
-
   Display::printText("LIS1");
 }
 void Ui::CListenState::onClick(Ui& context) const
@@ -254,10 +246,7 @@ void Ui::CListenState::onExit(Ui& context) const
 
 void Ui::CCap1State::onEntry(Ui& context) const
 {
-  // read state values from EEPROM
-  context.m_Cap1 = 0;
-  Cap1::set(context.m_Cap1);
-  Display::printDec(context.m_Cap1);
+  Display::printDec(Cap1::value);
 }
 void Ui::CCap1State::onClick(Ui& context) const
 {
@@ -265,9 +254,10 @@ void Ui::CCap1State::onClick(Ui& context) const
 }
 void Ui::CCap1State::onXcrement(Ui& context, int8_t xcrement) const
 {
- context.m_Cap1 += xcrement;
- Cap1::set(context.m_Cap1);
- Display::printDec(context.m_Cap1);
+ Cap1::set(Cap1::value + xcrement);
+ Display::printDec(Cap1::value);
+ Data.cap1 = Cap1::value;
+ eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CCap1State::onClickSW1(Ui& context) const
 {
@@ -284,10 +274,7 @@ void Ui::CCap1State::onExit(Ui& context) const
 
 void Ui::CCap2State::onEntry(Ui& context) const
 {
-  // read state values from EEPROM
-  context.m_Cap2 = 0;
-  Cap2::set(context.m_Cap2);
-  Display::printDec(context.m_Cap2);
+  Display::printDec(Cap2::value);
 }
 void Ui::CCap2State::onClick(Ui& context) const
 {
@@ -295,9 +282,10 @@ void Ui::CCap2State::onClick(Ui& context) const
 }
 void Ui::CCap2State::onXcrement(Ui& context, int8_t xcrement) const
 {
- context.m_Cap2 += xcrement;
- Cap2::set(context.m_Cap2);
- Display::printDec(context.m_Cap2);
+  Cap2::set(Cap2::value + xcrement);
+  Display::printDec(Cap2::value);
+  Data.cap2 = Cap2::value;
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CCap2State::onClickSW1(Ui& context) const
 {
