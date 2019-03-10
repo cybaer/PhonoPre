@@ -46,7 +46,7 @@ bake_all: build/PhonoPre.hex
 			-U efuse:w:0x$(EFUSE):m \
 			-U hfuse:w:0x$(HFUSE):m \
 			-U lfuse:w:0x$(LFUSE):m
-		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -B 1 \
+		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -B 10 \
 			-U flash:w:build/PhonoPre.hex:i \
 #		$(AVRDUDE) $(AVRDUDE_COM_OPTS) $(AVRDUDE_ISP_OPTS) -B 1 \
 #			-U lock:w:0x$(LOCK):m

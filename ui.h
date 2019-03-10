@@ -45,6 +45,28 @@ public:
 private:
   int8_t m_Xcrement;
 
+  int16_t m_longClickCounterSW1;
+  bool m_LongClickActiveSW1;
+
+  struct CapValue
+  {
+    bool isValue;
+    int8_t value;
+    void setValue(int8_t val)
+    {
+      isValue = true;
+      value = val;
+    }
+    void reset(void) { isValue = false; }
+  };
+  struct CapValues
+  {
+    CapValue valueSW1;
+    CapValue valueSW2;
+  };
+  CapValues m_CapValChannel1;
+  CapValues m_CapValChannel2;
+
 class IUiState
   {
   public:
@@ -56,12 +78,15 @@ class IUiState
     virtual void onXcrement(Ui&, int8_t xcrement) const {}
     virtual void onClickSW1(Ui&) const {}
     virtual void onClickSW2(Ui&) const {}
+    virtual void onLongClickSW1(Ui&) const {}
+    virtual void onLongClickSW2(Ui&) const {}
 
     //virtual void onLongClick(Ui&) const {}
 
   private:
     /** Forbidden */
     DISALLOW_COPY_AND_ASSIGN (IUiState);
+
   };
 
   /**
@@ -182,39 +207,68 @@ class IUiState
   };
 
   class CCap1State: public IUiState
+  {
+  public:
+    static CCap1State& getInstance(void)
     {
-    public:
-      static CCap1State& getInstance(void)
-      {
-        static CCap1State s_instance;
-        return s_instance;
-      }
-      virtual void onEntry(Ui&) const;
-      virtual void onExit(Ui&) const;
-      virtual void onClick(Ui&) const;
-      virtual void onXcrement(Ui&, int8_t xcrement) const;
-      virtual void onClickSW1(Ui&) const;
-      virtual void onClickSW2(Ui&) const;
-
-    };
+      static CCap1State s_instance;
+      return s_instance;
+    }
+    virtual void onEntry(Ui&) const;
+    virtual void onExit(Ui&) const;
+    virtual void onClick(Ui&) const;
+    virtual void onXcrement(Ui&, int8_t xcrement) const;
+    virtual void onClickSW1(Ui&) const;
+    virtual void onClickSW2(Ui&) const;
+    virtual void onLongClickSW1(Ui&) const;
+    virtual void onLongClickSW2(Ui&) const;
+  };
 
   class CCap2State: public IUiState
-      {
-      public:
-        static CCap2State& getInstance(void)
-        {
-          static CCap2State s_instance;
-          return s_instance;
-        }
-        virtual void onEntry(Ui&) const;
-        virtual void onExit(Ui&) const;
-        virtual void onClick(Ui&) const;
-        virtual void onXcrement(Ui&, int8_t xcrement) const;
-        virtual void onClickSW1(Ui&) const;
-        virtual void onClickSW2(Ui&) const;
+  {
+  public:
+    static CCap2State& getInstance(void)
+    {
+      static CCap2State s_instance;
+      return s_instance;
+    }
+    virtual void onEntry(Ui&) const;
+    virtual void onExit(Ui&) const;
+    virtual void onClick(Ui&) const;
+    virtual void onXcrement(Ui&, int8_t xcrement) const;
+    virtual void onClickSW1(Ui&) const;
+    virtual void onClickSW2(Ui&) const;
+   // virtual void onLongClickSW1(Ui&) const;
+   // virtual void onLongClickSW2(Ui&) const;
+  };
 
-      };
+  class CRes1State: public IUiState
+  {
+  public:
+    static CRes1State& getInstance(void)
+    {
+      static CRes1State s_instance;
+      return s_instance;
+    }
+    virtual void onEntry(Ui&) const;
+    virtual void onExit(Ui&) const;
+    virtual void onClick(Ui&) const;
+    virtual void onXcrement(Ui&, int8_t xcrement) const;
+  };
 
+  class CRes2State: public IUiState
+  {
+  public:
+    static CRes2State& getInstance(void)
+    {
+      static CRes2State s_instance;
+      return s_instance;
+    }
+    virtual void onEntry(Ui&) const;
+    virtual void onExit(Ui&) const;
+    virtual void onClick(Ui&) const;
+    virtual void onXcrement(Ui&, int8_t xcrement) const;
+  };
 
   void setState(IUiState& state)
   {

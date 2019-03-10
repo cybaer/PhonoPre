@@ -22,13 +22,14 @@
 
 struct PhonoData
 {
+  int8_t channel;
   int8_t cap1;
   int8_t cap2;
   bool res1;
   bool res2;
 };
-PhonoData eeData EEMEM ;
-PhonoData Data;
+PhonoData eeData EEMEM;
+PhonoData Data = {0, 8, 8, false, false};
 
 Ui::Ui()
 : m_Xcrement(0)
@@ -45,41 +46,48 @@ void Ui::poll()
 }
 void Ui::doEvents()
 {
+  static int16_t LONG_CLICK_COUNT = 2000L;
+
   if(m_Xcrement != 0)     m_State->onXcrement(*this, m_Xcrement);
   if(Encoder::clicked())  m_State->onClick(*this);
   if(Switch_1::raised())  m_State->onClickSW1(*this);
   if(Switch_2::raised())  m_State->onClickSW2(*this);
 
-  /*
-  static int16_t i = 0;
-  if(Switch_1::lowered()) i++;
-
-  i += m_Xcrement;
-  //Cap1::set(i);
-  Cap2::set(i);
-
-  Led2::set(Switch_2::high());
-  Res2::setHigh(Switch_2::high());
-
-  Led1::set(Encoder::immediate_value());
-
-  portExtender::WriteIO();
-  Display::printDec(i);*/
-
+  if(Switch_1::low())
+  {
+    if(!m_LongClickActiveSW1 && ++m_longClickCounterSW1 >= LONG_CLICK_COUNT)
+    {
+      m_State->onLongClickSW1(*this);
+      m_LongClickActiveSW1 = true;
+    }
+  }
+  else
+  {
+    m_longClickCounterSW1 = 0;
+    m_LongClickActiveSW1 = false;
+  }
   portExtender::WriteIO();
 }
 
+void setResText(bool high)
+{
+  if(high)  Display::printText("Hi  ");
+  else      Display::printText("Lo  ");
+}
 
 
 // State machine
 void Ui::CInitState::onExit(Ui& context) const
 {
+  eeprom_write_block(&Data, &eeData, sizeof(Data));
+
   // read values from EEPROM
   eeprom_read_block(&Data, &eeData, sizeof(Data));
   Cap1::set(Data.cap1);
   Cap2::set(Data.cap2);
   Res1::setHigh(Data.res1);
   Res2::setHigh(Data.res2);
+  ChannelSwitch::setValue(Data.channel);
   //context.setState(Ui::CListenState::getInstance());
 }
 
@@ -146,18 +154,12 @@ void Ui::CMenueR1State::onEntry(Ui& context) const
 }
 void Ui::CMenueR1State::onClick(Ui& context) const
 {
-  context.setState(Ui::CListenState::getInstance());
+  context.setState(Ui::CRes1State::getInstance());
 }
 void Ui::CMenueR1State::onXcrement(Ui& context, int8_t xcrement) const
 {
-  if(xcrement > 0)
-  {
-    context.setState(Ui::CMenueR2State::getInstance());
-  }
-  if(xcrement < 0)
-  {
-    context.setState(Ui::CMenueCap2State::getInstance());
-  }
+  if(xcrement > 0)  context.setState(Ui::CMenueR2State::getInstance());
+  if(xcrement < 0)  context.setState(Ui::CMenueCap2State::getInstance());
 }
 void Ui::CMenueR2State::onEntry(Ui& context) const
 {
@@ -165,18 +167,12 @@ void Ui::CMenueR2State::onEntry(Ui& context) const
 }
 void Ui::CMenueR2State::onClick(Ui& context) const
 {
-  context.setState(Ui::CListenState::getInstance());
+  context.setState(Ui::CRes2State::getInstance());
 }
 void Ui::CMenueR2State::onXcrement(Ui& context, int8_t xcrement) const
 {
-  if(xcrement > 0)
-  {
-    context.setState(Ui::CMenueRPMState::getInstance());
-  }
-  if(xcrement < 0)
-  {
-    context.setState(Ui::CMenueR1State::getInstance());
-  }
+  if(xcrement > 0)  context.setState(Ui::CMenueRPMState::getInstance());
+  if(xcrement < 0)  context.setState(Ui::CMenueR1State::getInstance());
 }
 void Ui::CMenueRPMState::onEntry(Ui& context) const
 {
@@ -188,14 +184,8 @@ void Ui::CMenueRPMState::onClick(Ui& context) const
 }
 void Ui::CMenueRPMState::onXcrement(Ui& context, int8_t xcrement) const
 {
-  if(xcrement > 0)
-  {
-    context.setState(Ui::CMenueLoadState::getInstance());
-  }
-  if(xcrement < 0)
-  {
-    context.setState(Ui::CMenueR2State::getInstance());
-  }
+  if(xcrement > 0)  context.setState(Ui::CMenueLoadState::getInstance());
+  if(xcrement < 0)  context.setState(Ui::CMenueR2State::getInstance());
 }
 void Ui::CMenueLoadState::onEntry(Ui& context) const
 {
@@ -207,21 +197,16 @@ void Ui::CMenueLoadState::onClick(Ui& context) const
 }
 void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
 {
-  if(xcrement > 0)
-  {
-    context.setState(Ui::CMenueListenState::getInstance());
-  }
-  if(xcrement < 0)
-  {
-    context.setState(Ui::CMenueRPMState::getInstance());
-  }
+  if(xcrement > 0)  context.setState(Ui::CMenueListenState::getInstance());
+  if(xcrement < 0)  context.setState(Ui::CMenueRPMState::getInstance());
 }
 
-
+//// working states ////
 
 void Ui::CListenState::onEntry(Ui& context) const
 {
-  Display::printText("LIS1");
+  if(Data.channel == 0)   Display::printText("LIS1");
+  else Display::printText("LIS2");
 }
 void Ui::CListenState::onClick(Ui& context) const
 {
@@ -229,19 +214,21 @@ void Ui::CListenState::onClick(Ui& context) const
 }
 void Ui::CListenState::onClickSW1(Ui& context) const
 {
-  RPM::set_value(true);
   ChannelSwitch::activateCh1();
   Display::printText("LIS1");
+  Data.channel = ChannelSwitch::value;
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onClickSW2(Ui& context) const
 {
-  RPM::set_value(false);
   ChannelSwitch::activateCh2();
   Display::printText("LIS2");
+  Data.channel = ChannelSwitch::value;
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onExit(Ui& context) const
 {
-  //??
+
 }
 
 void Ui::CCap1State::onEntry(Ui& context) const
@@ -257,19 +244,32 @@ void Ui::CCap1State::onXcrement(Ui& context, int8_t xcrement) const
  Cap1::set(Cap1::value + xcrement);
  Display::printDec(Cap1::value);
  Data.cap1 = Cap1::value;
- eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CCap1State::onClickSW1(Ui& context) const
 {
-  Display::printText("T1");
+  if(context.m_CapValChannel1.valueSW1.isValue)
+  {
+    Cap1::set(context.m_CapValChannel1.valueSW1.value);
+    Display::printDec(Cap1::value);
+    Data.cap1 = Cap1::value;
+  }
 }
 void Ui::CCap1State::onClickSW2(Ui& context) const
 {
   Display::printText("T2");
 }
+void Ui::CCap1State::onLongClickSW1(Ui& context) const
+{
+  context.m_CapValChannel1.valueSW1.setValue(Data.cap1);
+  Led1::set(true);
+}
+void Ui::CCap1State::onLongClickSW2(Ui& context) const
+{
+  Display::printText("T2");
+}
 void Ui::CCap1State::onExit(Ui& context) const
 {
-  //??
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 
 void Ui::CCap2State::onEntry(Ui& context) const
@@ -297,5 +297,47 @@ void Ui::CCap2State::onClickSW2(Ui& context) const
 }
 void Ui::CCap2State::onExit(Ui& context) const
 {
-  //??
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
+
+void Ui::CRes1State::onEntry(Ui& context) const
+{
+  setResText(Data.res1);
+}
+void Ui::CRes1State::onClick(Ui& context) const
+{
+  context.setState(Ui::CMenueR1State::getInstance());
+}
+void Ui::CRes1State::onXcrement(Ui& context, int8_t xcrement) const
+{
+  bool isHigh = xcrement > 0;
+  Res1::setHigh(isHigh);
+  setResText(isHigh);
+  Data.res1 = Res1::value;
+}
+void Ui::CRes1State::onExit(Ui& context) const
+{
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
+}
+
+
+void Ui::CRes2State::onEntry(Ui& context) const
+{
+  setResText(Data.res2);
+}
+void Ui::CRes2State::onClick(Ui& context) const
+{
+  context.setState(Ui::CMenueR2State::getInstance());
+}
+void Ui::CRes2State::onXcrement(Ui& context, int8_t xcrement) const
+{
+  bool isHigh = xcrement > 0;
+  Res2::setHigh(isHigh);
+  setResText(isHigh);
+  Data.res2 = Res2::value;
+}
+void Ui::CRes2State::onExit(Ui& context) const
+{
+  eeprom_write_block (&Data, &eeData, sizeof(Data));
+}
+

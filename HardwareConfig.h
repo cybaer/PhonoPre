@@ -187,6 +187,11 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
         Rel1::set_value(in);
         Rel2::set_value(!in);
       }
+      static void setValue(int8_t in)
+      {
+        if(in == 0) activateCh1();
+        else activateCh2();
+      }
       static void activateCh1(void) { setHigh(false); }
       static void activateCh2(void) { setHigh(true); }
       static bool value;
