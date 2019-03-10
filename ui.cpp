@@ -34,6 +34,10 @@ PhonoData Data = {0, 8, 8, false, false};
 Ui::Ui()
 : m_Xcrement(0)
 , m_State(&Ui::CInitState::getInstance())
+, m_longClickCounterSW1(0)
+, m_longClickCounterSW2(0)
+, m_LongClickActiveSW1(false)
+, m_LongClickActiveSW2(false)
 {}
 void Ui::init() { setState(Ui::CListenState::getInstance()); }
 void Ui::poll()
@@ -66,6 +70,20 @@ void Ui::doEvents()
     m_longClickCounterSW1 = 0;
     m_LongClickActiveSW1 = false;
   }
+
+  if(Switch_2::low())
+    {
+      if(!m_LongClickActiveSW2 && ++m_longClickCounterSW2 >= LONG_CLICK_COUNT)
+      {
+        m_State->onLongClickSW2(*this);
+        m_LongClickActiveSW2 = true;
+      }
+    }
+    else
+    {
+      m_longClickCounterSW2 = 0;
+      m_LongClickActiveSW2 = false;
+    }
   portExtender::WriteIO();
 }
 
@@ -75,7 +93,12 @@ void setResText(bool high)
   else      Display::printText("Lo  ");
 }
 
-
+void clearLedsImmediately()
+{
+  Led1::clear();
+  Led2::clear();
+  portExtender::WriteIO();
+}
 // State machine
 void Ui::CInitState::onExit(Ui& context) const
 {
@@ -88,6 +111,10 @@ void Ui::CInitState::onExit(Ui& context) const
   Res1::setHigh(Data.res1);
   Res2::setHigh(Data.res2);
   ChannelSwitch::setValue(Data.channel);
+  Led1::setGreen();
+  Led2::setGreen();
+  Led1::clear();
+  Led2::clear();
   //context.setState(Ui::CListenState::getInstance());
 }
 
@@ -205,8 +232,11 @@ void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
 
 void Ui::CListenState::onEntry(Ui& context) const
 {
-  if(Data.channel == 0)   Display::printText("LIS1");
+  bool isCh1 = Data.channel == 0;
+  if(isCh1)   Display::printText("LIS1");
   else Display::printText("LIS2");
+  Led1::set(isCh1);
+  Led2::set(!isCh1);
 }
 void Ui::CListenState::onClick(Ui& context) const
 {
@@ -214,21 +244,26 @@ void Ui::CListenState::onClick(Ui& context) const
 }
 void Ui::CListenState::onClickSW1(Ui& context) const
 {
-  ChannelSwitch::activateCh1();
+  Led1::set();
+  Led2::clear();
   Display::printText("LIS1");
+  ChannelSwitch::activateCh1();
   Data.channel = ChannelSwitch::value;
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onClickSW2(Ui& context) const
 {
-  ChannelSwitch::activateCh2();
+  Led1::clear();
+  Led2::set();
   Display::printText("LIS2");
+  ChannelSwitch::activateCh2();
   Data.channel = ChannelSwitch::value;
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onExit(Ui& context) const
 {
-
+  Led1::clear();
+  Led2::clear();
 }
 
 void Ui::CCap1State::onEntry(Ui& context) const
@@ -252,24 +287,41 @@ void Ui::CCap1State::onClickSW1(Ui& context) const
     Cap1::set(context.m_CapValChannel1.valueSW1.value);
     Display::printDec(Cap1::value);
     Data.cap1 = Cap1::value;
+    Led1::set();
+    Led2::clear();
   }
 }
 void Ui::CCap1State::onClickSW2(Ui& context) const
 {
-  Display::printText("T2");
+  if(context.m_CapValChannel1.valueSW2.isValue)
+    {
+      Cap1::set(context.m_CapValChannel1.valueSW2.value);
+      Display::printDec(Cap1::value);
+      Data.cap1 = Cap1::value;
+      Led2::set();
+      Led1::clear();
+    }
 }
 void Ui::CCap1State::onLongClickSW1(Ui& context) const
 {
   context.m_CapValChannel1.valueSW1.setValue(Data.cap1);
-  Led1::set(true);
+  clearLedsImmediately();
+  _delay_ms(200);
+  Led1::set();
+
 }
 void Ui::CCap1State::onLongClickSW2(Ui& context) const
 {
-  Display::printText("T2");
+  context.m_CapValChannel1.valueSW2.setValue(Data.cap1);
+  clearLedsImmediately();
+  _delay_ms(200);
+  Led2::set();
 }
 void Ui::CCap1State::onExit(Ui& context) const
 {
   eeprom_write_block (&Data, &eeData, sizeof(Data));
+  Led1::clear();
+  Led2::clear();
 }
 
 void Ui::CCap2State::onEntry(Ui& context) const
@@ -289,15 +341,46 @@ void Ui::CCap2State::onXcrement(Ui& context, int8_t xcrement) const
 }
 void Ui::CCap2State::onClickSW1(Ui& context) const
 {
-  Display::printText("T1");
+  if(context.m_CapValChannel2.valueSW1.isValue)
+  {
+    Cap2::set(context.m_CapValChannel2.valueSW1.value);
+    Display::printDec(Cap2::value);
+    Data.cap2 = Cap2::value;
+    Led1::set();
+    Led2::clear();
+  }
 }
 void Ui::CCap2State::onClickSW2(Ui& context) const
 {
-  Display::printText("T2");
+  if(context.m_CapValChannel2.valueSW2.isValue)
+    {
+      Cap2::set(context.m_CapValChannel2.valueSW2.value);
+      Display::printDec(Cap2::value);
+      Data.cap2 = Cap2::value;
+      Led2::set();
+      Led1::clear();
+    }
+}
+void Ui::CCap2State::onLongClickSW1(Ui& context) const
+{
+  context.m_CapValChannel2.valueSW1.setValue(Data.cap2);
+  clearLedsImmediately();
+  _delay_ms(200);
+  Led1::set();
+
+}
+void Ui::CCap2State::onLongClickSW2(Ui& context) const
+{
+  context.m_CapValChannel2.valueSW2.setValue(Data.cap2);
+  clearLedsImmediately();
+  _delay_ms(200);
+  Led2::set();
 }
 void Ui::CCap2State::onExit(Ui& context) const
 {
   eeprom_write_block (&Data, &eeData, sizeof(Data));
+  Led1::clear();
+  Led2::clear();
 }
 
 void Ui::CRes1State::onEntry(Ui& context) const

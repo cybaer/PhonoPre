@@ -46,12 +46,15 @@ private:
   int8_t m_Xcrement;
 
   int16_t m_longClickCounterSW1;
+  int16_t m_longClickCounterSW2;
   bool m_LongClickActiveSW1;
+  bool m_LongClickActiveSW2;
 
   struct CapValue
   {
-    bool isValue;
-    int8_t value;
+    bool isValue = false;
+    int8_t value = 0;
+
     void setValue(int8_t val)
     {
       isValue = true;
@@ -238,8 +241,8 @@ class IUiState
     virtual void onXcrement(Ui&, int8_t xcrement) const;
     virtual void onClickSW1(Ui&) const;
     virtual void onClickSW2(Ui&) const;
-   // virtual void onLongClickSW1(Ui&) const;
-   // virtual void onLongClickSW2(Ui&) const;
+    virtual void onLongClickSW1(Ui&) const;
+    virtual void onLongClickSW2(Ui&) const;
   };
 
   class CRes1State: public IUiState

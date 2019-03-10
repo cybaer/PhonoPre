@@ -213,8 +213,16 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
     {
       LedPin::set_mode(DIGITAL_OUTPUT);
     }
-    static void set() { LedPin::set(Color::value()); }
-    static void set(uint8_t v) { LedPin::set(v == Color::value()); }
+    static void setGreen(void) { Color::clear(); }
+    static void setRed(void) { Color::set(); }
+    static void set() { LedPin::set(!Color::value()); }
+    static void clear()  { LedPin::set(Color::value()); }
+    static void set(uint8_t v)
+    {
+      if(v) LedPin::set();
+      else  LedPin::clear();
+    }
+    static bool get() { return LedPin::value() != Color::value(); }
   };
 
   typedef PortPin<portExtender, 4> Color;
