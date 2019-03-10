@@ -1,4 +1,5 @@
 # PhonoPre
 
-* Double phone preamplifier
-* Microprocesor driven change of input capasitor and resistor per channel
+* Double phono preamplifier
+* per channel change of input capasitor and resistor 
+* Microprocessor driven
