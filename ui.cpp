@@ -219,8 +219,7 @@ void Ui::CListenState::onClickSW1(Ui& context) const
 {
   Led1::set();
   Led2::clear();
-  Display::reset();
-  //Display::printText("LIS1");
+  Display::printText("LIS1");
   ChannelSwitch::activateCh1();
   Data.channel = ChannelSwitch::value;
   eeprom_write_block (&Data, &eeData, sizeof(Data));
@@ -268,13 +267,13 @@ void Ui::CCap1State::onClickSW1(Ui& context) const
 void Ui::CCap1State::onClickSW2(Ui& context) const
 {
   if(context.m_CapValChannel1.valueSW2.isValue)
-    {
-      Cap1::set(context.m_CapValChannel1.valueSW2.value);
-      Display::printDec(Cap1::value);
-      Data.cap1 = Cap1::value;
-      Led2::set();
-      Led1::clear();
-    }
+  {
+    Cap1::set(context.m_CapValChannel1.valueSW2.value);
+    Display::printDec(Cap1::value);
+    Data.cap1 = Cap1::value;
+    Led2::set();
+    Led1::clear();
+  }
 }
 void Ui::CCap1State::onLongClickSW1(Ui& context) const
 {
@@ -282,7 +281,6 @@ void Ui::CCap1State::onLongClickSW1(Ui& context) const
   clearLedsImmediately();
   _delay_ms(200);
   Led1::set();
-
 }
 void Ui::CCap1State::onLongClickSW2(Ui& context) const
 {
@@ -341,7 +339,6 @@ void Ui::CCap2State::onLongClickSW1(Ui& context) const
   clearLedsImmediately();
   _delay_ms(200);
   Led1::set();
-
 }
 void Ui::CCap2State::onLongClickSW2(Ui& context) const
 {
@@ -377,7 +374,6 @@ void Ui::CRes1State::onExit(Ui& context) const
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 
-
 void Ui::CRes2State::onEntry(Ui& context) const
 {
   setResText(Data.res2);
@@ -397,4 +393,3 @@ void Ui::CRes2State::onExit(Ui& context) const
 {
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
-
