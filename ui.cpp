@@ -46,44 +46,18 @@ void Ui::poll()
   Switch_1::Read();
   Switch_2::Read();
   m_Xcrement = Encoder::Read();
-
 }
+
 void Ui::doEvents()
 {
-  static int16_t LONG_CLICK_COUNT = 2000L;
-
   if(m_Xcrement != 0)     m_State->onXcrement(*this, m_Xcrement);
   if(Encoder::clicked())  m_State->onClick(*this);
   if(Switch_1::raised())  m_State->onClickSW1(*this);
   if(Switch_2::raised())  m_State->onClickSW2(*this);
 
-  if(Switch_1::low())
-  {
-    if(!m_LongClickActiveSW1 && ++m_longClickCounterSW1 >= LONG_CLICK_COUNT)
-    {
-      m_State->onLongClickSW1(*this);
-      m_LongClickActiveSW1 = true;
-    }
-  }
-  else
-  {
-    m_longClickCounterSW1 = 0;
-    m_LongClickActiveSW1 = false;
-  }
+  if(SW1LongClick::raised()) m_State->onLongClickSW1(*this);
+  if(SW2LongClick::raised()) m_State->onLongClickSW2(*this);
 
-  if(Switch_2::low())
-    {
-      if(!m_LongClickActiveSW2 && ++m_longClickCounterSW2 >= LONG_CLICK_COUNT)
-      {
-        m_State->onLongClickSW2(*this);
-        m_LongClickActiveSW2 = true;
-      }
-    }
-    else
-    {
-      m_longClickCounterSW2 = 0;
-      m_LongClickActiveSW2 = false;
-    }
   portExtender::WriteIO();
 }
 
@@ -99,10 +73,11 @@ void clearLedsImmediately()
   Led2::clear();
   portExtender::WriteIO();
 }
+
 // State machine
 void Ui::CInitState::onExit(Ui& context) const
 {
-  eeprom_write_block(&Data, &eeData, sizeof(Data));
+  //eeprom_write_block(&Data, &eeData, sizeof(Data));
 
   // read values from EEPROM
   eeprom_read_block(&Data, &eeData, sizeof(Data));
@@ -246,7 +221,8 @@ void Ui::CListenState::onClickSW1(Ui& context) const
 {
   Led1::set();
   Led2::clear();
-  Display::printText("LIS1");
+  Display::reset();
+  //Display::printText("LIS1");
   ChannelSwitch::activateCh1();
   Data.channel = ChannelSwitch::value;
   eeprom_write_block (&Data, &eeData, sizeof(Data));

@@ -60,6 +60,7 @@ int main(void)
 
     static uint16_t count= 0;
     //if(count >= 10000UL) cli();
+    //_delay_us(200);
     if(poll && count < 10000UL)
     {
       //count++;

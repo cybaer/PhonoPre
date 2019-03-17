@@ -44,6 +44,40 @@ typedef MCP23S08<spi_base, CS2, 0> portExtender;
 typedef DebouncedSwitch<PortPin<portExtender, 1> > Switch_1;
 typedef DebouncedSwitch<PortPin<portExtender, 2> > Switch_2;
 
+template<typename SW>
+class SWLongClick
+{
+  static const int16_t LONG_CLICK_COUNT = 2000L;
+public:
+  static bool raised(void)
+  {
+    if(SW::low())
+    {
+      if(!active && ++counter >= LONG_CLICK_COUNT)
+      {
+        active = true;
+        return true;
+      }
+    }
+    else
+    {
+      counter = 0;
+      active = false;
+    }
+    return false;
+  }
+  static bool active;
+  static uint16_t counter;
+};
+
+template<typename SW>
+bool SWLongClick<SW>::active = false;
+template<typename SW>
+uint16_t SWLongClick<SW>::counter = 0;
+
+typedef SWLongClick<Switch_1>  SW1LongClick;
+typedef SWLongClick<Switch_2>  SW2LongClick;
+
 typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPin<portExtender, 3> > Encoder;
 
   template<typename SPI>
