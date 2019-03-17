@@ -45,11 +45,6 @@ public:
 private:
   int8_t m_Xcrement;
 
-  int16_t m_longClickCounterSW1;
-  int16_t m_longClickCounterSW2;
-  bool m_LongClickActiveSW1;
-  bool m_LongClickActiveSW2;
-
   struct CapValue
   {
     bool isValue = false;
@@ -83,13 +78,11 @@ class IUiState
     virtual void onClickSW2(Ui&) const {}
     virtual void onLongClickSW1(Ui&) const {}
     virtual void onLongClickSW2(Ui&) const {}
-
     //virtual void onLongClick(Ui&) const {}
 
   private:
     /** Forbidden */
     DISALLOW_COPY_AND_ASSIGN (IUiState);
-
   };
 
   /**
@@ -104,7 +97,6 @@ class IUiState
       return s_instance;
     }
     virtual void onExit(Ui&) const;
-
   };
 
   class CMenueListenState: public IUiState
@@ -204,7 +196,6 @@ class IUiState
     virtual void onEntry(Ui&) const;
     virtual void onExit(Ui&) const;
     virtual void onClick(Ui&) const;
-    //virtual void onXcrement(Ui&, int8_t xcrement) const;
     virtual void onClickSW1(Ui&) const;
     virtual void onClickSW2(Ui&) const;
   };
@@ -279,7 +270,6 @@ class IUiState
     m_State = &state;
     m_State->onEntry(*this);
   }
-
     IUiState* m_State;
 };
 

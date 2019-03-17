@@ -34,12 +34,10 @@ PhonoData Data = {0, 8, 8, false, false};
 Ui::Ui()
 : m_Xcrement(0)
 , m_State(&Ui::CInitState::getInstance())
-, m_longClickCounterSW1(0)
-, m_longClickCounterSW2(0)
-, m_LongClickActiveSW1(false)
-, m_LongClickActiveSW2(false)
 {}
+
 void Ui::init() { setState(Ui::CListenState::getInstance()); }
+
 void Ui::poll()
 {
   portExtender::ReadIO();

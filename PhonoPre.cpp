@@ -57,19 +57,12 @@ int main(void)
 
   while(1)
   {
-
-    static uint16_t count= 0;
-    //if(count >= 10000UL) cli();
-    //_delay_us(200);
-    if(poll && count < 10000UL)
+    if(poll)
     {
-      //count++;
       poll = false;
       //Debug::Toggle();
       ui.poll();
       ui.doEvents();
-
     }
   }
 }
-
