@@ -25,8 +25,8 @@ struct PhonoData
   int8_t channel;
   int8_t cap1;
   int8_t cap2;
-  bool res1;
-  bool res2;
+  int8_t res1;
+  int8_t res2;
 };
 PhonoData eeData EEMEM;
 PhonoData Data = {0, 8, 8, false, false};
@@ -58,11 +58,28 @@ void Ui::doEvents()
 
   portExtender::WriteIO();
 }
-
-void setResText(bool high)
+void setLisTextLed(int8_t val)
 {
-  if(high)  Display::printText("Hi  ");
-  else      Display::printText("Lo  ");
+  if(val == 2)
+  {
+    Display::printText("Lis1");
+    Led1::set();
+    Led2::clear();
+  }
+  else if(val == 1)
+  {
+    Display::printText("Lis2");
+    Led2::set();
+    Led1::clear();
+  }
+  else Display::printText("err ");
+}
+void setResText(int8_t val)
+{
+  if     (val == 0)  Display::printText("Hi  ");
+  else if(val == 1)  Display::printText("nid ");
+  else if(val == 2)  Display::printText("Lo  ");
+  else Display::printText("err ");
 }
 
 void clearLedsImmediately()
@@ -81,8 +98,8 @@ void Ui::CInitState::onExit(Ui& context) const
   eeprom_read_block(&Data, &eeData, sizeof(Data));
   Cap1::set(Data.cap1);
   Cap2::set(Data.cap2);
-  Res1::setHigh(Data.res1);
-  Res2::setHigh(Data.res2);
+  Res1::setValue(Data.res1);
+  Res2::setValue(Data.res2);
   ChannelSwitch::setValue(Data.channel);
   Led1::setGreen();
   Led2::setGreen();
@@ -205,11 +222,7 @@ void Ui::CMenueLoadState::onXcrement(Ui& context, int8_t xcrement) const
 
 void Ui::CListenState::onEntry(Ui& context) const
 {
-  bool isCh1 = Data.channel == 0;
-  if(isCh1)   Display::printText("LIS1");
-  else Display::printText("LIS2");
-  Led1::set(isCh1);
-  Led2::set(!isCh1);
+  setLisTextLed(Data.channel);
 }
 void Ui::CListenState::onClick(Ui& context) const
 {
@@ -217,20 +230,16 @@ void Ui::CListenState::onClick(Ui& context) const
 }
 void Ui::CListenState::onClickSW1(Ui& context) const
 {
-  Led1::set();
-  Led2::clear();
-  Display::printText("LIS1");
   ChannelSwitch::activateCh1();
   Data.channel = ChannelSwitch::value;
+  setLisTextLed(Data.channel);
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onClickSW2(Ui& context) const
 {
-  Led1::clear();
-  Led2::set();
-  Display::printText("LIS2");
   ChannelSwitch::activateCh2();
   Data.channel = ChannelSwitch::value;
+  setLisTextLed(Data.channel);
   eeprom_write_block (&Data, &eeData, sizeof(Data));
 }
 void Ui::CListenState::onExit(Ui& context) const
@@ -364,9 +373,8 @@ void Ui::CRes1State::onClick(Ui& context) const
 }
 void Ui::CRes1State::onXcrement(Ui& context, int8_t xcrement) const
 {
-  bool isHigh = xcrement > 0;
-  Res1::setHigh(isHigh);
-  setResText(isHigh);
+  Res1::setValue(Res1::value + xcrement);
+  setResText(Res1::value);
   Data.res1 = Res1::value;
 }
 void Ui::CRes1State::onExit(Ui& context) const
@@ -384,9 +392,8 @@ void Ui::CRes2State::onClick(Ui& context) const
 }
 void Ui::CRes2State::onXcrement(Ui& context, int8_t xcrement) const
 {
-  bool isHigh = xcrement > 0;
-  Res2::setHigh(isHigh);
-  setResText(isHigh);
+  Res2::setValue(Res2::value + xcrement);
+  setResText(Res2::value);
   Data.res2 = Res2::value;
 }
 void Ui::CRes2State::onExit(Ui& context) const

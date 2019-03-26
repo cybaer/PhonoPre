@@ -215,23 +215,20 @@ typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPi
         Rel1::set_mode(DIGITAL_OUTPUT);
         Rel2::set_mode(DIGITAL_OUTPUT);
       }
-      static void setHigh(bool in)
-      {
-        value = in;
-        Rel1::set_value(in);
-        Rel2::set_value(!in);
-      }
       static void setValue(int8_t in)
       {
-        if(in == 0) activateCh1();
-        else activateCh2();
+        value = in > 2 ? 2 :
+                in < 0 ? 0 :
+                in;
+        Rel1::set_value(value & 0x1);
+        Rel2::set_value(value & 0x2);
       }
-      static void activateCh1(void) { setHigh(false); }
-      static void activateCh2(void) { setHigh(true); }
-      static bool value;
+      static void activateCh1() { setValue(2); }
+      static void activateCh2() { setValue(1); }
+      static int8_t value;
     };
     template <typename Rel1, typename Rel2>
-    bool Switcher<Rel1, Rel2>::value;
+    int8_t Switcher<Rel1, Rel2>::value;
 
 
 
