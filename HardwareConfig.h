@@ -38,7 +38,6 @@ typedef Gpio<PortD, 0> RPM;
 // HW SPI
 static const uint8_t SPI_Speed = 32;
 typedef SpiMasterBase<MSB_FIRST, SPI_Speed> spi_base;
-typedef SpiMaster<CS1, MSB_FIRST, SPI_Speed> spi_Display;
 typedef MCP23S08<spi_base, CS2, 0> portExtender;
 
 typedef DebouncedSwitch<PortPin<portExtender, 1> > Switch_1;
@@ -80,217 +79,193 @@ typedef SWLongClick<Switch_2>  SW2LongClick;
 
 typedef RotaryEncoder<PortPin<portExtender, 6>, PortPin<portExtender, 7>, PortPin<portExtender, 3> > Encoder;
 
-  template<typename SPI>
-  class C7Segment
+template<typename SPIBase, typename SlaveSelect>
+class C7Segment
+{
+public:
+  static inline void Begin()
   {
-  public:
-
-    static void reset() { SPI::Write('v'); }
-    static void setDim(uint8_t dim)
-    {
-      SPI::Write(0x7A); // Command byte
-      SPI::Write(dim);    // Dim display
-    }
-    static void printDec(int val)
-    {
-      if(val > 9999) return;
-      char buf[12];
-      sprintf(buf, "%4d", val);
-      SPI::Write(buf[0]);
-      SPI::Write(buf[1]);
-      SPI::Write(buf[2]);
-      SPI::Write(buf[3]);
-    }
-    static void printText(const char *t)
-    {
-      char buf[5];
-      for(int i=0; i<4; i++)
-      {
-        buf[i] = t[i];
-      }
-      buf[4] = '\0';
-      SPI::Write(buf[0]);
-      SPI::Write(buf[1]);
-      SPI::Write(buf[2]);
-      SPI::Write(buf[3]);
-    }
-    /*void printScrollText(const char *t)
-    {
-      m_Scrolling = true;
-      for(int i=0; i<20; i++)
-      {
-        m_ScrollText[i] = t[i];
-      }
-      m_ScrollText[20] = '\0';
-      m_Pos = 0;
-      scroll();
-    }
-    void scroll(bool bb = true)
-    {
-      if(m_Scrolling && bb)
-      {
-        printText(&m_ScrollText[m_Pos]);
-        if(++m_Pos >13)
-          m_Pos = 0;
-      }
-      else
-      {
-        m_Scrolling = false;
-        m_Pos = 0;
-      }
-    }
-    void printBeat()
-    {
-      if(m_Beat)
-      {
-        m_Beat = false;
-        sendDecimalPointControl(1 << m_Bit);
-        if(++m_Bit > 3)
-          m_Bit = 0;
-      }
-    }
-
-    void toggleColon()
-    {
-      m_Colon = !m_Colon;
-      setColon(m_Colon);
-    }
-    void setColon(bool on)
-    {
-      m_DecimalPoints = on ? (m_DecimalPoints | 0x10) : (m_DecimalPoints & ~0x10);
-      sendDecimalPointControl(m_DecimalPoints);
-    }
-    void setApostroph(bool on)
-    {
-      m_DecimalPoints = on ? (m_DecimalPoints | 0x20) : (m_DecimalPoints & ~0x20);
-      sendDecimalPointControl(m_DecimalPoints);
-    }
-    void sendDecimalPointControl(uint8_t data)
-    {
-      m_Serial.print(0x77,BYTE); // Command byte
-      m_Serial.print(data,BYTE);
-    }*/
-  private:
-
-
-
-  };
-
-  typedef C7Segment<spi_Display> Display;
-
-  template <typename Rel1, typename Rel2, typename Rel3, typename Rel4>
-  class Capacitor
-  {
-  public:
-    static void init()
-    {
-      Rel1::set_mode(DIGITAL_OUTPUT);
-      Rel2::set_mode(DIGITAL_OUTPUT);
-      Rel3::set_mode(DIGITAL_OUTPUT);
-      Rel4::set_mode(DIGITAL_OUTPUT);
-    }
-    static void set(int8_t val)
-    {
-      value = val;
-      Rel1::set_value(val & 0x01);
-      Rel2::set_value(val & 0x02);
-      Rel3::set_value(val & 0x04);
-      Rel4::set_value(val & 0x08);
-    }
-    static int8_t value;
-  };
-  template <typename Rel1, typename Rel2, typename Rel3, typename Rel4>
-  int8_t Capacitor<Rel1, Rel2, Rel3, Rel4>::value;
-
-  typedef Capacitor<Gpio<PortD, 5>, Gpio<PortD, 6>, Gpio<PortD, 7>, Gpio<PortD, 4> > Cap1;
-  typedef Capacitor<Gpio<PortC, 2>, Gpio<PortC, 3>, Gpio<PortC, 4>, Gpio<PortC, 5> > Cap2;
-
-
-  template <typename Rel1, typename Rel2>
-    class Switcher
-    {
-    public:
-      static void init()
-      {
-        Rel1::set_mode(DIGITAL_OUTPUT);
-        Rel2::set_mode(DIGITAL_OUTPUT);
-      }
-      static void setValue(int8_t in)
-      {
-        value = in > 2 ? 2 :
-                in < 0 ? 0 :
-                in;
-        Rel1::set_value(value & 0x1);
-        Rel2::set_value(value & 0x2);
-      }
-      static void activateCh1() { setValue(2); }
-      static void activateCh2() { setValue(1); }
-      static int8_t value;
-    };
-    template <typename Rel1, typename Rel2>
-    int8_t Switcher<Rel1, Rel2>::value;
-
-
-
-  typedef Switcher<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
-  typedef Switcher<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
-  typedef Switcher<Gpio<PortD, 3>, Gpio<PortD, 1> > ChannelSwitch;
-
-  template<typename LedPin, typename Color>
-  class DualColorLED
-  {
-  public:
-    static void init()
-    {
-      LedPin::set_mode(DIGITAL_OUTPUT);
-    }
-    static void setGreen(void) { Color::clear(); }
-    static void setRed(void) { Color::set(); }
-    static void set() { LedPin::set(!Color::value()); }
-    static void clear()  { LedPin::set(Color::value()); }
-    static void set(uint8_t v)
-    {
-      if(v) LedPin::set();
-      else  LedPin::clear();
-    }
-    static bool get() { return LedPin::value() != Color::value(); }
-  };
-
-  typedef PortPin<portExtender, 4> Color;
-  typedef DualColorLED<PortPin<portExtender, 0>, Color> Led1;
-  typedef DualColorLED<PortPin<portExtender, 5>, Color> Led2;
-
-  inline void initInputs(void)
-  {
-
+    SlaveSelect::Low();
   }
-  inline void initOutputs(void)
+  static inline void End()
   {
-    Debug::set_mode(DIGITAL_OUTPUT);
-    Debug::set_value(false);
-    RPM::set_mode(DIGITAL_OUTPUT);
-    RPM::set_value(true);
+    SlaveSelect::High();
+  }
+  static inline void Write(uint8_t v)
+  {
+    Begin();
+    SPIBase::Send(v);
+    End();
   }
 
-  inline void initHW(void)
+  static void reset()
   {
-    initInputs();
-    initOutputs();
-    spi_Display::Init();
-
-    Cap1::init();
-    Cap2::init();
-    Res1::init();
-    Res2::init();
-
-
-    Switch_1::Init();
-    Switch_2::Init();
-    Led1::init();
-    Led2::init();
-    Encoder::Init();
-
-    portExtender::Init();
+    Write('v');
   }
+  static void setDim(uint8_t dim)
+  {
+    Write(0x7A); // Command byte
+    Write(dim);    // Dim display
+  }
+  static void printDec(int val)
+  {
+    if (val > 9999)
+      return;
+    char buf[12];
+    sprintf(buf, "%4d", val);
+    Write(buf[0]);
+    Write(buf[1]);
+    Write(buf[2]);
+    Write(buf[3]);
+  }
+  static void printText(const char *t)
+  {
+    char buf[5];
+    for (int i = 0; i < 4; i++)
+    {
+      buf[i] = t[i];
+    }
+    buf[4] = '\0';
+    Write(buf[0]);
+    Write(buf[1]);
+    Write(buf[2]);
+    Write(buf[3]);
+  }
+};
+
+typedef C7Segment<spi_base, CS1> Display;
+
+template<typename Rel1, typename Rel2, typename Rel3, typename Rel4>
+class Capacitor
+{
+public:
+  static void init()
+  {
+    Rel1::set_mode(DIGITAL_OUTPUT);
+    Rel2::set_mode(DIGITAL_OUTPUT);
+    Rel3::set_mode(DIGITAL_OUTPUT);
+    Rel4::set_mode(DIGITAL_OUTPUT);
+  }
+  static void set(int8_t val)
+  {
+    value = val;
+    Rel1::set_value(val & 0x01);
+    Rel2::set_value(val & 0x02);
+    Rel3::set_value(val & 0x04);
+    Rel4::set_value(val & 0x08);
+  }
+  static int8_t value;
+};
+template<typename Rel1, typename Rel2, typename Rel3, typename Rel4>
+int8_t Capacitor<Rel1, Rel2, Rel3, Rel4>::value;
+
+typedef Capacitor<Gpio<PortD, 6>, Gpio<PortD, 7>, Gpio<PortD, 4>, Gpio<PortD, 5> > Cap1;
+typedef Capacitor<Gpio<PortC, 3>, Gpio<PortC, 4>, Gpio<PortC, 5>, Gpio<PortC, 2> > Cap2;
+
+template<typename Rel1, typename Rel2>
+class Switcher
+{
+public:
+  static void init()
+  {
+    Rel1::set_mode(DIGITAL_OUTPUT);
+    Rel2::set_mode(DIGITAL_OUTPUT);
+  }
+  static void setValue(int8_t in)
+  {
+    value = in > 2 ? 2 : in < 0 ? 0 : in;
+    Rel1::set_value(value & 0x1);
+    Rel2::set_value(value & 0x2);
+  }
+  static void activateCh1()
+  {
+    setValue(2);
+  }
+  static void activateCh2()
+  {
+    setValue(1);
+  }
+  static int8_t value;
+};
+template<typename Rel1, typename Rel2>
+int8_t Switcher<Rel1, Rel2>::value;
+
+typedef Switcher<Gpio<PortB, 6>, Gpio<PortB, 7> > Res1;
+typedef Switcher<Gpio<PortC, 0>, Gpio<PortC, 1> > Res2;
+typedef Switcher<Gpio<PortD, 3>, Gpio<PortD, 1> > ChannelSwitch;
+
+template<typename LedPin, typename Color>
+class DualColorLED
+{
+public:
+  static void init()
+  {
+    LedPin::set_mode(DIGITAL_OUTPUT);
+  }
+  static void setGreen(void)
+  {
+    Color::clear();
+  }
+  static void setRed(void)
+  {
+    Color::set();
+  }
+  static void set()
+  {
+    LedPin::set(!Color::value());
+  }
+  static void clear()
+  {
+    LedPin::set(Color::value());
+  }
+  static void set(uint8_t v)
+  {
+    if (v)
+      LedPin::set();
+    else
+      LedPin::clear();
+  }
+  static bool get()
+  {
+    return LedPin::value() != Color::value();
+  }
+};
+
+typedef PortPin<portExtender, 4> Color;
+typedef DualColorLED<PortPin<portExtender, 0>, Color> Led1;
+typedef DualColorLED<PortPin<portExtender, 5>, Color> Led2;
+
+inline void initInputs(void)
+{
+
+}
+inline void initOutputs(void)
+{
+  Debug::set_mode(DIGITAL_OUTPUT);
+  Debug::set_value(false);
+  RPM::set_mode(DIGITAL_OUTPUT);
+  RPM::set_value(true);
+}
+
+inline void initHW(void)
+{
+  initInputs();
+  initOutputs();
+
+  Cap1::init();
+  Cap2::init();
+  Res1::init();
+  Res2::init();
+
+  Switch_1::Init();
+  Switch_2::Init();
+  Led1::init();
+  Led2::init();
+  Encoder::Init();
+
+  spi_base::Init();
+
+  portExtender::Init();
+}
 
 #endif /* HARDWARECONFIG_H_ */

@@ -28,7 +28,6 @@ extern "C" void __cxa_guard_release (__guard *);
 extern "C" void __cxa_guard_abort (__guard *);
 extern "C" void __cxa_pure_virtual();
 
-
 #include "HardwareConfig.h"
 #include "avrlib/base.h"
 
@@ -78,7 +77,6 @@ class IUiState
     virtual void onClickSW2(Ui&) const {}
     virtual void onLongClickSW1(Ui&) const {}
     virtual void onLongClickSW2(Ui&) const {}
-    //virtual void onLongClick(Ui&) const {}
 
   private:
     /** Forbidden */

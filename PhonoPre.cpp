@@ -39,18 +39,18 @@ ISR(TIMER2_OVF_vect, ISR_NOBLOCK)
 
 int main(void)
 {
-  sei();
-  initHW();
-
   // 8MHz / (8 * 510) = 1960 Hz
   // prescaler(2)_|
   Timer<2>::set_prescaler(2);
   Timer<2>::set_mode(TIMER_PWM_PHASE_CORRECT);
   Timer<2>::Start();
 
-  Display::reset();
-  Display::setDim(10);
-  Color::set(true);
+  sei();
+  initHW();
+
+  //Display::reset();
+  //Display::setDim(10);
+  //Color::set(true);
   _delay_ms(200);
   ui.init();
   _delay_ms(200);
